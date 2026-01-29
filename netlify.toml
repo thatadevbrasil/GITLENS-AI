@@ -1,7 +1,19 @@
 
 [build]
   publish = "."
-  command = "" # Se houver um comando de build específico, coloque aqui.
+  command = "" # Deixe vazio se estiver usando esm.sh direto no navegador
+
+# Configuração para a branch principal (Produção)
+[context.production]
+  environment = { NODE_ENV = "production" }
+
+# Configuração para Branch Deploys (Qualquer branch que não seja a principal)
+[context.branch-deploy]
+  command = "" # Você pode adicionar comandos de teste aqui se desejar
+
+# Configuração para Deploy Previews (Pull Requests)
+[context.deploy-preview]
+  command = ""
 
 [[redirects]]
   from = "/*"

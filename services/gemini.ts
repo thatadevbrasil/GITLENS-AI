@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { AnalysisContext, AIAnalysis } from "../types";
+import { AnalysisContext, AIAnalysis } from "../types.ts";
 
 export const analyzeProject = async (context: AnalysisContext): Promise<AIAnalysis> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
