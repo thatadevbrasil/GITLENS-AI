@@ -22,6 +22,8 @@ export interface AIAnalysis {
   targetAudience: string;
   techStackRating: string;
   suggestions: string[];
+  projectType: string;
+  githubActionsWorkflow: string;
 }
 
 export interface LanguageData {

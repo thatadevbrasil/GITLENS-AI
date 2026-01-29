@@ -12,7 +12,11 @@ import {
   ExternalLink,
   RefreshCw,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Rocket,
+  Copy,
+  Check,
+  FileCode
 } from 'lucide-react';
 import { GithubRepo, AIAnalysis } from './types';
 import { analyzeRepo } from './services/gemini';
@@ -35,6 +39,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const fetchRepoData = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +49,7 @@ const App: React.FC = () => {
     setError(null);
     setRepo(null);
     setAnalysis(null);
+    setCopied(false);
 
     // Basic regex to extract owner/repo from URL or handle direct owner/repo input
     let repoPath = query.replace('https://github.com/', '').trim();
@@ -67,6 +73,7 @@ const App: React.FC = () => {
 
   const triggerAnalysis = async (repository: GithubRepo) => {
     setAnalyzing(true);
+    setCopied(false);
     try {
       const result = await analyzeRepo(repository);
       setAnalysis(result);
@@ -75,6 +82,12 @@ const App: React.FC = () => {
     } finally {
       setAnalyzing(false);
     }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const chartData = repo ? [
@@ -109,10 +122,10 @@ const App: React.FC = () => {
         {/* Search Hero */}
         <section className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-extrabold mb-4 text-white">
-            Unlock Repository <span className="text-blue-500">Intelligence</span>
+            Analyze & <span className="text-purple-500">Deploy</span>
           </h2>
           <p className="text-slate-400 max-w-2xl mx-auto mb-8 text-lg">
-            Paste a GitHub URL and let Gemini AI analyze the architecture, purpose, and tech stack of any public project.
+            Paste a GitHub URL to analyze architecture and generate instant deployment workflows.
           </p>
           
           <form onSubmit={fetchRepoData} className="max-w-2xl mx-auto relative group">
@@ -121,15 +134,15 @@ const App: React.FC = () => {
               placeholder="facebook/react or github.com/owner/repo"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 pl-12 pr-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-lg shadow-xl"
+              className="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 pl-12 pr-32 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-lg shadow-xl"
             />
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-purple-400 transition-colors" />
             <button 
               type="submit"
               disabled={loading}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 text-white font-semibold py-2 px-6 rounded-xl transition-all flex items-center gap-2"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 text-white font-semibold py-2 px-6 rounded-xl transition-all flex items-center gap-2"
             >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Analyze'}
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Launch'}
             </button>
           </form>
 
@@ -220,11 +233,11 @@ const App: React.FC = () => {
               {analyzing ? (
                 <div className="bg-slate-900 rounded-3xl p-12 border border-slate-800 shadow-2xl flex flex-col items-center justify-center min-h-[500px]">
                   <div className="relative mb-6">
-                    <div className="w-20 h-20 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-                    <Zap className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-blue-400 w-8 h-8" />
+                    <div className="w-20 h-20 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+                    <Zap className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-purple-400 w-8 h-8" />
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-2">Analyzing with Gemini AI</h3>
-                  <p className="text-slate-400 animate-pulse">Reading code patterns and documentation...</p>
+                  <p className="text-slate-400 animate-pulse">Detecting project type and deployment strategy...</p>
                 </div>
               ) : analysis ? (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -234,7 +247,7 @@ const App: React.FC = () => {
                       <Cpu size={120} />
                     </div>
                     <div className="flex items-center gap-2 mb-4">
-                      <Zap className="text-blue-400" size={24} />
+                      <Zap className="text-purple-400" size={24} />
                       <h3 className="text-xl font-bold text-white">AI Technical Summary</h3>
                     </div>
                     <p className="text-lg text-slate-300 leading-relaxed relative z-10">
@@ -252,7 +265,7 @@ const App: React.FC = () => {
                       <ul className="space-y-3">
                         {analysis.keyFeatures.map((feature, i) => (
                           <li key={i} className="flex gap-3 text-sm text-slate-400">
-                            <span className="text-blue-500 font-bold">•</span>
+                            <span className="text-purple-500 font-bold">•</span>
                             {feature}
                           </li>
                         ))}
@@ -297,6 +310,59 @@ const App: React.FC = () => {
                       </ul>
                     </div>
                   </div>
+
+                  {/* Deployment Assistant Section */}
+                  <div className="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-2xl ring-1 ring-purple-500/20">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-purple-500/10 p-2 rounded-lg">
+                          <Rocket className="text-purple-400" size={24} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-white text-lg">Deployment Assistant</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-slate-500 uppercase tracking-wider">Detected Type:</span>
+                            <span className="text-xs font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                              {analysis.projectType}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-950 rounded-xl border border-slate-800 overflow-hidden">
+                      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800 bg-slate-900/50">
+                        <div className="flex items-center gap-2 text-slate-400">
+                          <FileCode size={14} />
+                          <span className="text-xs font-mono">.github/workflows/deploy.yml</span>
+                        </div>
+                        <button 
+                          onClick={() => copyToClipboard(analysis.githubActionsWorkflow)}
+                          className="flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-white transition-colors bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700"
+                        >
+                          {copied ? (
+                            <>
+                              <Check size={14} className="text-emerald-400" />
+                              <span className="text-emerald-400">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy size={14} />
+                              <span>Copy YAML</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <div className="p-4 overflow-x-auto custom-scrollbar">
+                        <pre className="text-sm font-mono text-blue-300 leading-relaxed whitespace-pre-wrap">
+                          {analysis.githubActionsWorkflow}
+                        </pre>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-4 text-center">
+                      Create this file in your repository to enable automated actions.
+                    </p>
+                  </div>
                   
                   <button 
                     onClick={() => triggerAnalysis(repo)}
@@ -310,7 +376,7 @@ const App: React.FC = () => {
                 <div className="bg-slate-900/50 rounded-3xl p-12 border-2 border-dashed border-slate-800 flex flex-col items-center justify-center min-h-[400px]">
                   <Github className="text-slate-700 w-16 h-16 mb-4" />
                   <p className="text-slate-500 text-center max-w-sm">
-                    Information about the repository will appear here once you search.
+                    Enter a repository URL above to see deployment strategies and technical insights.
                   </p>
                 </div>
               )}
@@ -321,12 +387,12 @@ const App: React.FC = () => {
         {!repo && !loading && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
             {[
-              { icon: <Zap />, title: "Real-time Processing", desc: "Live GitHub data fetching for the most accurate metrics." },
-              { icon: <Cpu />, title: "Powered by Gemini 3.0", desc: "The latest LLM technology to parse complex technical documentation." },
-              { icon: <Target />, title: "Actionable Insights", desc: "Don't just see code, understand the business and user impact." }
+              { icon: <Zap />, title: "Instant Analysis", desc: "Get immediate feedback on code structure and quality." },
+              { icon: <Rocket />, title: "Auto-Deploy Config", desc: "Generates CI/CD workflows tailored to the project stack." },
+              { icon: <Target />, title: "Business Insights", desc: "Understand the target audience and value proposition." }
             ].map((feature, i) => (
-              <div key={i} className="p-8 bg-slate-900/40 border border-slate-800 rounded-3xl hover:bg-slate-900/60 transition-all text-center">
-                <div className="inline-block p-4 bg-blue-500/10 text-blue-400 rounded-2xl mb-4">
+              <div key={i} className="p-8 bg-slate-900/40 border border-slate-800 rounded-3xl hover:bg-slate-900/60 transition-all text-center group">
+                <div className="inline-block p-4 bg-purple-500/10 text-purple-400 rounded-2xl mb-4 group-hover:scale-110 transition-transform">
                   {React.cloneElement(feature.icon as React.ReactElement, { size: 28 })}
                 </div>
                 <h4 className="text-lg font-bold text-white mb-2">{feature.title}</h4>
@@ -338,7 +404,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="mt-20 border-t border-slate-800 py-12 text-center text-slate-500 text-sm">
-        <p>© 2024 GitLens AI Dashboard. Built with React and Gemini API.</p>
+        <p>© 2024 GitLens AI Dashboard. Built with React and Gemini 3.0.</p>
       </footer>
     </div>
   );
