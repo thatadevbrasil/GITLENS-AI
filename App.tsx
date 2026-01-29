@@ -92,6 +92,13 @@ const App: React.FC = () => {
     }
   }, [user]);
 
+  // Verificar se a API KEY está configurada no Netlify
+  useEffect(() => {
+    if (!process.env.API_KEY) {
+      console.warn("Aviso: API_KEY não encontrada. Certifique-se de configurá-la no painel do Netlify.");
+    }
+  }, []);
+
   const login = (email: string) => {
     const newUser: User = {
       id: Math.random().toString(36).substr(2, 9),
@@ -132,7 +139,7 @@ const App: React.FC = () => {
 
     try {
       const response = await fetch(`https://api.github.com/repos/${repoPath}`);
-      if (!response.ok) throw new Error('Repository not found. Ensure it is public.');
+      if (!response.ok) throw new Error('Repositório não encontrado. Verifique se ele é público.');
       
       const data: GithubRepo = await response.json();
       const context: AnalysisContext = { type: 'github', data };
@@ -148,7 +155,7 @@ const App: React.FC = () => {
 
   const processZipFile = async (file: File) => {
     if (!user || user.tier !== 'pro') {
-      setError("ZIP Analysis is a Pro feature. Please upgrade your account.");
+      setError("A análise de ZIP é um recurso Pro. Por favor, faça o upgrade da sua conta.");
       scrollToSection('pricing');
       return;
     }
@@ -160,7 +167,7 @@ const App: React.FC = () => {
 
     try {
       if (!file.name.endsWith('.zip')) {
-        throw new Error("Please upload a .zip file");
+        throw new Error("Por favor, envie um arquivo .zip");
       }
 
       const zip = new JSZip();
@@ -188,7 +195,7 @@ const App: React.FC = () => {
 
       const localProject: LocalProject = {
         name: file.name.replace('.zip', ''),
-        description: readmeContent.slice(0, 300) + (readmeContent.length > 300 ? '...' : '') || "Local project uploaded via ZIP",
+        description: readmeContent.slice(0, 300) + (readmeContent.length > 300 ? '...' : '') || "Projeto local carregado via ZIP",
         files: filePaths,
         keyFiles: keyFileContents
       };
@@ -198,7 +205,7 @@ const App: React.FC = () => {
       triggerAnalysis(context);
 
     } catch (err: any) {
-      setError(err.message || "Failed to process zip file");
+      setError(err.message || "Falha ao processar arquivo ZIP");
     } finally {
       setLoading(false);
     }
@@ -211,7 +218,7 @@ const App: React.FC = () => {
       const result = await analyzeProject(context);
       setAnalysis(result);
     } catch (err) {
-      setError("AI Analysis failed. Please try again.");
+      setError("A análise de IA falhou. Verifique se a API_KEY está configurada corretamente no Netlify.");
     } finally {
       setAnalyzing(false);
     }
@@ -246,7 +253,6 @@ const App: React.FC = () => {
     <AuthContext.Provider value={{ user, login, logout, upgrade, showAuthModal, setShowAuthModal }}>
       <div className="min-h-screen bg-slate-950 text-slate-200 selection:bg-purple-500/30">
         
-        {/* Navigation */}
         <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-[60]">
           <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
@@ -259,8 +265,8 @@ const App: React.FC = () => {
             </div>
             
             <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-              <button onClick={() => scrollToSection('features')} className="hover:text-blue-400 transition-colors">Features</button>
-              <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-400 transition-colors">Pricing</button>
+              <button onClick={() => scrollToSection('features')} className="hover:text-blue-400 transition-colors">Recursos</button>
+              <button onClick={() => scrollToSection('pricing')} className="hover:text-blue-400 transition-colors">Preços</button>
             </div>
 
             <div className="flex items-center gap-4">
@@ -280,22 +286,22 @@ const App: React.FC = () => {
                       <div className="px-3 py-2 border-b border-slate-800 mb-2">
                         <div className="flex items-center gap-2">
                           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${user.tier === 'pro' ? 'bg-purple-500/20 text-purple-400' : 'bg-slate-800 text-slate-500'} uppercase tracking-widest`}>
-                            {user.tier} Account
+                            Conta {user.tier.toUpperCase()}
                           </span>
                         </div>
                         <p className="text-xs text-slate-500 truncate mt-1">{user.email}</p>
                       </div>
                       <button className="w-full text-left px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-2">
-                        <UserIcon size={16} /> Profile Settings
+                        <UserIcon size={16} /> Configurações
                       </button>
                       {user.tier === 'free' && (
                         <button onClick={() => { scrollToSection('pricing'); setShowUserMenu(false); }} className="w-full text-left px-3 py-2 text-sm text-purple-400 hover:bg-purple-500/10 rounded-lg transition-colors flex items-center gap-2">
-                          <Rocket size={16} /> Upgrade to Pro
+                          <Rocket size={16} /> Upgrade para Pro
                         </button>
                       )}
                       <div className="border-t border-slate-800 mt-2 pt-2">
                         <button onClick={logout} className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors flex items-center gap-2">
-                          <LogOut size={16} /> Log Out
+                          <LogOut size={16} /> Sair
                         </button>
                       </div>
                     </div>
@@ -306,7 +312,7 @@ const App: React.FC = () => {
                   onClick={() => setShowAuthModal(true)}
                   className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 transition-all"
                 >
-                  Sign In
+                  Entrar
                 </button>
               )}
             </div>
@@ -314,20 +320,19 @@ const App: React.FC = () => {
         </header>
 
         <main className="max-w-7xl mx-auto px-4 py-12">
-          {/* Hero Section */}
           <section className="mb-16 text-center">
-            <h2 className="text-4xl md:text-6xl font-black mb-6 text-white tracking-tight">
-              Analyze, Optimize, <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Deploy</span>
+            <h2 className="text-4xl md:text-6xl font-black mb-6 text-white tracking-tight leading-tight">
+              Analise, Otimize e <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Implemente</span>
             </h2>
             <p className="text-slate-400 max-w-2xl mx-auto text-xl mb-12 leading-relaxed">
-              The only AI-powered platform designed to translate your code repositories into production-ready deployment strategies.
+              A única plataforma de IA desenhada para traduzir seus repositórios em estratégias de deploy prontas para produção.
             </p>
 
             <div className="max-w-2xl mx-auto space-y-8">
               <form onSubmit={fetchRepoData} className="relative group">
                 <input 
                   type="text"
-                  placeholder="e.g. facebook/react or github.com/owner/repo"
+                  placeholder="ex: facebook/react ou github.com/owner/repo"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-5 pl-14 pr-36 focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all text-lg shadow-2xl placeholder:text-slate-600"
@@ -338,17 +343,16 @@ const App: React.FC = () => {
                   disabled={loading}
                   className="absolute right-2 top-1/2 -translate-y-1/2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 text-white font-bold py-3 px-8 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-purple-500/20"
                 >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Analyze'}
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Analisar'}
                 </button>
               </form>
 
               <div className="flex items-center gap-4 text-slate-500">
                 <div className="flex-1 border-t border-slate-800"></div>
-                <span className="text-xs font-bold uppercase tracking-widest">or drop a zip</span>
+                <span className="text-xs font-bold uppercase tracking-widest">ou solte um zip</span>
                 <div className="flex-1 border-t border-slate-800"></div>
               </div>
 
-              {/* Gated Upload Area */}
               <div 
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -356,7 +360,7 @@ const App: React.FC = () => {
                 onDrop={handleDrop}
                 onClick={() => {
                   if (user?.tier === 'pro') fileInputRef.current?.click();
-                  else setError("Upgrade to Pro to upload local ZIP files.");
+                  else setError("Faça upgrade para Pro para analisar arquivos ZIP locais.");
                 }}
                 className={`group relative border-2 border-dashed rounded-3xl p-10 transition-all duration-500 text-center ${
                   dragActive 
@@ -365,16 +369,16 @@ const App: React.FC = () => {
                 } cursor-pointer overflow-hidden`}
               >
                 {!user || user.tier !== 'pro' ? (
-                  <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6">
+                  <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center p-6 text-center">
                     <div className="bg-slate-900/80 p-3 rounded-2xl border border-slate-800 shadow-xl flex items-center gap-3 mb-4 animate-in fade-in slide-in-from-bottom-2">
                       <Lock size={20} className="text-purple-400" />
-                      <span className="text-sm font-bold text-white">Pro Feature</span>
+                      <span className="text-sm font-bold text-white">Recurso Pro</span>
                     </div>
                     <button 
                       onClick={(e) => { e.stopPropagation(); scrollToSection('pricing'); }}
                       className="text-purple-400 font-bold hover:text-purple-300 transition-colors text-sm underline underline-offset-4"
                     >
-                      Unlock Local ZIP Analysis
+                      Desbloquear Análise de ZIP
                     </button>
                   </div>
                 ) : null}
@@ -385,9 +389,9 @@ const App: React.FC = () => {
                     <Upload size={40} className={dragActive ? 'animate-bounce' : ''} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white mb-2">Deploy from Local Source</h3>
+                    <h3 className="text-xl font-bold text-white mb-2">Deploy de Fonte Local</h3>
                     <p className="text-slate-500 max-w-md mx-auto leading-relaxed">
-                      Analysis for private or non-Git projects. Drag your project .zip here.
+                      Analise projetos privados ou não-Git. Solte seu .zip aqui.
                     </p>
                   </div>
                 </div>
@@ -402,10 +406,8 @@ const App: React.FC = () => {
             </div>
           </section>
 
-          {/* Results Area */}
           {projectData && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start animate-in fade-in slide-in-from-bottom-10 duration-1000">
-              {/* Info Sidebar */}
               <aside className="lg:col-span-4 space-y-8">
                 {projectData.type === 'github' ? (
                    <div className="bg-slate-900 rounded-[2rem] p-8 border border-slate-800 shadow-2xl relative overflow-hidden group">
@@ -432,7 +434,7 @@ const App: React.FC = () => {
                          </div>
                        </div>
                        <a href={projectData.data.html_url} target="_blank" className="mt-8 flex items-center justify-center gap-3 w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl transition-all font-bold">
-                         <Github size={20} /> View Repository
+                         <Github size={20} /> Ver Repositório
                        </a>
                      </div>
                    </div>
@@ -444,16 +446,16 @@ const App: React.FC = () => {
                         <FolderArchive size={40} />
                       </div>
                       <h3 className="text-2xl font-black text-white mb-2">{projectData.data.name}</h3>
-                      <p className="text-slate-500 mb-8 italic">Local ZIP Analysis</p>
+                      <p className="text-slate-500 mb-8 italic">Análise de ZIP Local</p>
                       <div className="space-y-4">
                         <div className="flex items-center justify-between p-4 bg-slate-800/40 rounded-2xl border border-slate-700/50">
-                          <span className="text-slate-400 font-medium">Files</span>
+                          <span className="text-slate-400 font-medium">Arquivos</span>
                           <span className="text-white font-bold">{projectData.data.files.length}</span>
                         </div>
                         <div className="flex items-center justify-between p-4 bg-slate-800/40 rounded-2xl border border-slate-700/50">
                           <span className="text-slate-400 font-medium">Tier</span>
                           <span className="text-purple-400 font-bold uppercase text-xs tracking-widest flex items-center gap-1">
-                            <ShieldCheck size={14} /> PRO ONLY
+                            <ShieldCheck size={14} /> PRO
                           </span>
                         </div>
                       </div>
@@ -462,7 +464,6 @@ const App: React.FC = () => {
                 )}
               </aside>
 
-              {/* Analysis Main */}
               <div className="lg:col-span-8 space-y-8">
                  {analyzing ? (
                    <div className="bg-slate-900/50 rounded-[2rem] p-16 border-2 border-dashed border-slate-800 flex flex-col items-center justify-center text-center">
@@ -470,14 +471,13 @@ const App: React.FC = () => {
                         <div className="w-24 h-24 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
                         <Zap className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-purple-400 w-10 h-10 animate-pulse" />
                       </div>
-                      <h3 className="text-3xl font-black text-white mb-4">Reading Architectures...</h3>
+                      <h3 className="text-3xl font-black text-white mb-4">Decodificando Arquitetura...</h3>
                       <p className="text-slate-400 text-lg max-w-md mx-auto leading-relaxed">
-                        Our Gemini Engine is decoding your project structure to generate the best deployment roadmap.
+                        Nosso motor Gemini está analisando sua estrutura para gerar o melhor roadmap de deploy.
                       </p>
                    </div>
                  ) : analysis ? (
                    <div className="space-y-8">
-                     {/* Summary Card */}
                      <div className="bg-gradient-to-br from-slate-900 to-slate-950 rounded-[2.5rem] p-10 border border-slate-800 shadow-2xl relative overflow-hidden group">
                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                          <Rocket size={200} />
@@ -486,7 +486,7 @@ const App: React.FC = () => {
                          <div className="p-2 bg-purple-500/20 rounded-lg">
                             <Zap className="text-purple-400" size={24} />
                          </div>
-                         <h3 className="text-2xl font-bold text-white">Engineering Intelligence</h3>
+                         <h3 className="text-2xl font-bold text-white">Inteligência de Engenharia</h3>
                        </div>
                        <p className="text-xl text-slate-300 leading-relaxed font-medium">
                          {analysis.summary}
@@ -497,7 +497,7 @@ const App: React.FC = () => {
                         <div className="bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-xl">
                            <div className="flex items-center gap-3 mb-6">
                              <CheckCircle2 className="text-emerald-400" size={24} />
-                             <h4 className="text-lg font-bold text-white">Architecture Insights</h4>
+                             <h4 className="text-lg font-bold text-white">Insights da Estrutura</h4>
                            </div>
                            <ul className="space-y-4">
                              {analysis.keyFeatures.map((f, i) => (
@@ -511,20 +511,19 @@ const App: React.FC = () => {
                         <div className="bg-slate-900 rounded-3xl p-8 border border-slate-800 shadow-xl">
                            <div className="flex items-center gap-3 mb-6">
                              <Target className="text-blue-400" size={24} />
-                             <h4 className="text-lg font-bold text-white">Target Domain</h4>
+                             <h4 className="text-lg font-bold text-white">Domínio Alvo</h4>
                            </div>
                            <p className="text-slate-400 leading-relaxed text-sm">{analysis.targetAudience}</p>
                            <div className="mt-8 pt-6 border-t border-slate-800">
                              <div className="flex items-center gap-3 mb-4">
                                <Cpu className="text-purple-400" size={20} />
-                               <span className="text-sm font-bold text-slate-300">Technology Stack</span>
+                               <span className="text-sm font-bold text-slate-300">Stack Tecnológica</span>
                              </div>
                              <p className="text-sm text-slate-500 leading-relaxed">{analysis.techStackRating}</p>
                            </div>
                         </div>
                      </div>
 
-                     {/* Deployment Workflow Code */}
                      <div className="bg-slate-900 rounded-[2rem] p-8 border border-slate-800 shadow-2xl ring-1 ring-purple-500/20">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                            <div className="flex items-center gap-4">
@@ -532,7 +531,7 @@ const App: React.FC = () => {
                                 <Rocket className="text-purple-400" size={32} />
                               </div>
                               <div>
-                                <h4 className="text-xl font-bold text-white">Deployment Strategy</h4>
+                                <h4 className="text-xl font-bold text-white">Estratégia de Deploy</h4>
                                 <span className="text-xs font-bold text-purple-400 uppercase tracking-widest px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20 mt-1 inline-block">
                                   {analysis.projectType}
                                 </span>
@@ -543,7 +542,7 @@ const App: React.FC = () => {
                              className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-2xl transition-all"
                            >
                              {copied ? <Check className="text-emerald-400" size={18} /> : <Copy size={18} />}
-                             {copied ? 'Copied' : 'Copy Workflow'}
+                             {copied ? 'Copiado' : 'Copiar Workflow'}
                            </button>
                         </div>
 
@@ -559,7 +558,7 @@ const App: React.FC = () => {
                            </div>
                         </div>
                         <p className="text-xs text-slate-500 mt-6 text-center italic">
-                          Recommended strategy powered by our context-aware deployment engine.
+                          Estratégia recomendada para Netlify ou GitHub Actions.
                         </p>
                      </div>
                    </div>
@@ -568,30 +567,28 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {/* Pricing Section */}
           <section id="pricing" className="mt-32 scroll-mt-24">
             <div className="text-center mb-16">
-              <span className="text-purple-500 font-bold uppercase tracking-[0.3em] text-sm mb-4 block">INVEST IN YOUR FLOW</span>
-              <h2 className="text-4xl md:text-5xl font-black text-white mb-6">Simple, Transparent Pricing</h2>
-              <p className="text-slate-400 text-lg max-w-2xl mx-auto">Get access to the full suite of GitLens AI tools and supercharge your production pipeline.</p>
+              <span className="text-purple-500 font-bold uppercase tracking-[0.3em] text-sm mb-4 block">INVISTA NO SEU FLOW</span>
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-6">Planos Simples e Transparentes</h2>
+              <p className="text-slate-400 text-lg max-w-2xl mx-auto">Tenha acesso total às ferramentas do GitLens AI e impulsione seu pipeline de produção.</p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-              {/* Starter Plan */}
               <div className="bg-slate-900/40 border border-slate-800 rounded-[2.5rem] p-10 hover:border-slate-700 transition-all flex flex-col group">
                 <div className="mb-8">
                   <h3 className="text-2xl font-bold text-slate-200">Starter</h3>
                   <div className="flex items-baseline mt-4">
-                    <span className="text-5xl font-black text-white">$0</span>
+                    <span className="text-5xl font-black text-white">R$ 0</span>
                   </div>
-                  <p className="text-slate-500 mt-4 leading-relaxed">Perfect for open-source contributors and students.</p>
+                  <p className="text-slate-500 mt-4 leading-relaxed">Perfeito para contribuidores open-source e estudantes.</p>
                 </div>
                 <ul className="space-y-6 mb-12 flex-1">
                   {[
-                    "Public GitHub Repository Analysis",
-                    "Basic Deployment Workflows",
-                    "Stack Identification",
-                    "3 Analyses per day"
+                    "Análise de Repositórios Públicos",
+                    "Workflows de Deploy Básicos",
+                    "Identificação de Stack",
+                    "3 Análises por dia"
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-4 text-slate-400 font-medium">
                       <div className="bg-slate-800 rounded-full p-1"><Check size={14} className="text-slate-500" /></div>
@@ -603,30 +600,29 @@ const App: React.FC = () => {
                   onClick={() => !user && setShowAuthModal(true)}
                   className="w-full py-4 rounded-2xl border-2 border-slate-800 text-slate-400 font-bold hover:bg-slate-800 hover:text-white transition-all"
                 >
-                  {user ? 'Active Plan' : 'Get Started'}
+                  {user ? 'Plano Ativo' : 'Começar Agora'}
                 </button>
               </div>
 
-              {/* Pro Plan */}
               <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-purple-500/50 rounded-[2.5rem] p-10 relative overflow-hidden flex flex-col shadow-[0_0_80px_rgba(168,85,247,0.15)] group scale-105">
                 <div className="absolute top-0 right-0 bg-purple-600 text-white text-xs font-black px-6 py-2 rounded-bl-2xl tracking-widest uppercase shadow-lg">
-                  Most Advanced
+                  MAIS POPULAR
                 </div>
                 <div className="mb-8">
                   <h3 className="text-2xl font-bold text-purple-400">Pro Developer</h3>
                   <div className="flex items-baseline mt-4">
                     <span className="text-5xl font-black text-white">R$ 10</span>
-                    <span className="text-slate-500 ml-2 font-bold">/mo</span>
+                    <span className="text-slate-500 ml-2 font-bold">/mês</span>
                   </div>
-                  <p className="text-slate-400 mt-4 leading-relaxed">Unlock the full power of automated devops and private source analysis.</p>
+                  <p className="text-slate-400 mt-4 leading-relaxed">Libere o poder total da automação DevOps e análise de fontes privadas.</p>
                 </div>
                 <ul className="space-y-6 mb-12 flex-1">
                   {[
-                    "Everything in Starter",
-                    "Drag & Drop ZIP Analysis (No Git required)",
-                    "Premium Deployment Architectures",
-                    "Unlimited Daily Analyses",
-                    "Priority AI Generation Support"
+                    "Tudo do plano Starter",
+                    "Upload de ZIP (Sem necessidade de Git)",
+                    "Arquiteturas de Deploy Premium",
+                    "Análises Diárias Ilimitadas",
+                    "Suporte Prioritário Gemini AI"
                   ].map((item, i) => (
                     <li key={i} className="flex items-center gap-4 text-slate-200 font-semibold animate-in slide-in-from-left duration-500" style={{ animationDelay: `${i*100}ms` }}>
                       <div className="bg-purple-500/20 rounded-full p-1"><Check size={14} className="text-purple-400" /></div>
@@ -642,7 +638,7 @@ const App: React.FC = () => {
                   className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-black hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-purple-500/30 flex items-center justify-center gap-3"
                 >
                   {user?.tier === 'pro' ? <CheckCircle2 size={20} /> : <CreditCard size={20} />}
-                  {user?.tier === 'pro' ? 'Pro Plan Active' : 'Upgrade Now'}
+                  {user?.tier === 'pro' ? 'Plano Pro Ativo' : 'Assinar Agora'}
                 </button>
               </div>
             </div>
@@ -650,43 +646,40 @@ const App: React.FC = () => {
         </main>
 
         <footer className="mt-40 border-t border-slate-900 bg-slate-950/50 py-20 px-4">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-center md:text-left">
             <div className="col-span-1 md:col-span-2">
-               <div className="flex items-center gap-2 mb-6">
+               <div className="flex items-center justify-center md:justify-start gap-2 mb-6">
                 <div className="bg-blue-600 p-2 rounded-lg">
                   <Github className="w-6 h-6 text-white" />
                 </div>
                 <h1 className="text-2xl font-bold text-white">GitLens AI</h1>
               </div>
-              <p className="text-slate-500 max-w-sm leading-relaxed text-lg">
-                The intelligent bridge between code and production. Empowering developers to deploy with confidence.
+              <p className="text-slate-500 max-w-sm mx-auto md:mx-0 leading-relaxed text-lg">
+                A ponte inteligente entre código e produção. Empoderando desenvolvedores a fazerem deploy com confiança.
               </p>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-6">Product</h4>
+              <h4 className="text-white font-bold mb-6">Produto</h4>
               <ul className="space-y-4 text-slate-500 font-medium">
-                <li><a href="#" className="hover:text-purple-400 transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-purple-400 transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-purple-400 transition-colors">Documentation</a></li>
+                <li><button onClick={() => scrollToSection('features')} className="hover:text-purple-400 transition-colors">Recursos</button></li>
+                <li><button onClick={() => scrollToSection('pricing')} className="hover:text-purple-400 transition-colors">Preços</button></li>
+                <li><a href="#" className="hover:text-purple-400 transition-colors">Documentação</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-white font-bold mb-6">Connect</h4>
+              <h4 className="text-white font-bold mb-6">Conectar</h4>
               <ul className="space-y-4 text-slate-500 font-medium">
-                <li><a href="#" className="hover:text-purple-400 transition-colors">GitHub</a></li>
+                <li><a href="https://github.com" target="_blank" className="hover:text-purple-400 transition-colors">GitHub</a></li>
                 <li><a href="#" className="hover:text-purple-400 transition-colors">Twitter</a></li>
                 <li><a href="#" className="hover:text-purple-400 transition-colors">Discord</a></li>
               </ul>
             </div>
           </div>
           <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-slate-900 text-center text-slate-600 text-sm">
-            <p>© 2024 GitLens AI Platform. All rights reserved.</p>
+            <p>© 2024 GitLens AI Platform. Deploy otimizado para Netlify.</p>
           </div>
         </footer>
 
-        {/* --- MODALS --- */}
-
-        {/* Auth Modal */}
         {showAuthModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 overflow-hidden">
             <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={() => setShowAuthModal(false)}></div>
@@ -698,16 +691,16 @@ const App: React.FC = () => {
                   <div className="bg-blue-600/10 p-4 rounded-3xl inline-block mb-6">
                      <Github className="w-12 h-12 text-blue-500" />
                   </div>
-                  <h3 className="text-3xl font-black text-white mb-2">Welcome Back</h3>
-                  <p className="text-slate-500">Sign in to sync your repositories and access Pro features.</p>
+                  <h3 className="text-3xl font-black text-white mb-2">Bem-vindo</h3>
+                  <p className="text-slate-500">Entre para sincronizar seus repositórios e acessar recursos Pro.</p>
                </div>
                
                <div className="space-y-6">
                   <div>
-                     <label className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">Email Address</label>
+                     <label className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-2 px-1">E-mail</label>
                      <input 
                        type="email" 
-                       placeholder="hello@developer.com"
+                       placeholder="exemplo@dev.com"
                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-4 px-6 focus:ring-2 focus:ring-blue-500 outline-none transition-all text-white placeholder:text-slate-700"
                        onKeyDown={(e) => e.key === 'Enter' && login((e.target as HTMLInputElement).value)}
                      />
@@ -719,19 +712,9 @@ const App: React.FC = () => {
                     }}
                     className="w-full py-4 bg-white text-slate-950 font-black rounded-2xl hover:bg-slate-200 active:scale-[0.98] transition-all shadow-xl shadow-white/10"
                   >
-                    Continue
-                  </button>
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800"></div></div>
-                    <div className="relative flex justify-center text-xs"><span className="px-3 bg-slate-900 text-slate-500 font-bold uppercase tracking-widest">or</span></div>
-                  </div>
-                  <button className="w-full py-4 border-2 border-slate-800 rounded-2xl text-white font-bold hover:bg-slate-800 transition-all flex items-center justify-center gap-3">
-                    <Github size={20} /> Continue with GitHub
+                    Continuar
                   </button>
                </div>
-               <p className="text-center text-xs text-slate-600 mt-10">
-                 By continuing, you agree to our <span className="underline cursor-pointer">Terms of Service</span> and <span className="underline cursor-pointer">Privacy Policy</span>.
-               </p>
             </div>
           </div>
         )}

@@ -1,0 +1,9 @@
+
+[build]
+  publish = "."
+  command = "" # Se houver um comando de build específico, coloque aqui.
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
