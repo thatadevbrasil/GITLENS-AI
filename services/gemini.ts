@@ -1,27 +1,50 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { GithubRepo, AIAnalysis } from "../types";
+import { AnalysisContext, AIAnalysis } from "../types";
 
-export const analyzeRepo = async (repo: GithubRepo): Promise<AIAnalysis> => {
+export const analyzeProject = async (context: AnalysisContext): Promise<AIAnalysis> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
   
+  let promptContext = "";
+
+  if (context.type === 'github') {
+    const repo = context.data;
+    promptContext = `
+      Repo Name: ${repo.full_name}
+      Description: ${repo.description || 'No description provided'}
+      Language: ${repo.language || 'Unknown'}
+      Topics: ${repo.topics.join(', ')}
+      Source: GitHub API Metadata
+    `;
+  } else {
+    const project = context.data;
+    promptContext = `
+      Project Name: ${project.name}
+      Description: ${project.description || 'Analyzed from local zip file'}
+      Source: Local Zip Upload
+      
+      File Structure (partial):
+      ${project.files.slice(0, 100).join('\n')}
+      
+      Key File Contents:
+      ${Object.entries(project.keyFiles).map(([name, content]) => `--- ${name} ---\n${content.slice(0, 2000)}\n`).join('\n')}
+    `;
+  }
+
   const prompt = `
-    Analyze this GitHub repository to provide a technical evaluation and a deployment strategy.
+    Analyze this software project to provide a technical evaluation and a deployment strategy.
     
-    Repo Details:
-    - Name: ${repo.full_name}
-    - Description: ${repo.description || 'No description provided'}
-    - Language: ${repo.language || 'Unknown'}
-    - Topics: ${repo.topics.join(', ')}
+    Project Context:
+    ${promptContext}
     
     Return a JSON object with:
     1. 'summary': A concise summary.
-    2. 'keyFeatures': List of 4 key features.
+    2. 'keyFeatures': List of 4 key features based on the files or metadata.
     3. 'targetAudience': Who this is for.
-    4. 'techStackRating': Rating/Explanation of the stack.
+    4. 'techStackRating': Rating/Explanation of the stack detected.
     5. 'suggestions': 3 improvements.
-    6. 'projectType': The specific type (e.g., "React SPA", "Python Flask API", "Static HTML").
-    7. 'githubActionsWorkflow': A complete, valid YAML string for a GitHub Actions workflow to deploy this project (e.g., to GitHub Pages for frontend, or run tests/linting for backend).
+    6. 'projectType': The specific type (e.g., "React SPA", "Python Flask API", "Static HTML", "Node.js Service").
+    7. 'githubActionsWorkflow': A complete, valid YAML string for a GitHub Actions workflow to deploy this project. If it's a local zip, assume it will be pushed to GitHub Main branch.
   `;
 
   const response = await ai.models.generateContent({

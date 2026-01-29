@@ -16,6 +16,17 @@ export interface GithubRepo {
   updated_at: string;
 }
 
+export interface LocalProject {
+  name: string;
+  description?: string;
+  files: string[];
+  keyFiles: Record<string, string>; // filename: content
+}
+
+export type AnalysisContext = 
+  | { type: 'github'; data: GithubRepo }
+  | { type: 'local'; data: LocalProject };
+
 export interface AIAnalysis {
   summary: string;
   keyFeatures: string[];
@@ -26,8 +37,18 @@ export interface AIAnalysis {
   githubActionsWorkflow: string;
 }
 
-export interface LanguageData {
+export type UserTier = 'free' | 'pro';
+
+export interface User {
+  id: string;
+  email: string;
   name: string;
-  value: number;
-  fill: string;
+  tier: UserTier;
+  avatarUrl?: string;
+}
+
+export interface AuthState {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }

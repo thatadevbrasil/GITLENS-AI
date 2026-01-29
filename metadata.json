@@ -1,5 +1,5 @@
 {
   "name": "GitLens AI",
-  "description": "A sophisticated AI-powered dashboard that analyzes GitHub repositories using Gemini 3.0 to provide deep insights, tech stack evaluations, and automated deployment strategies.",
+  "description": "A sophisticated AI-powered dashboard offering free and premium tiers for GitHub repository analysis and automated deployment strategies.",
   "requestFramePermissions": []
 }
